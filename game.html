@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+<meta charset="UTF-8">
+<title>Beefen vs Rica</title>
+
+<style>
+
+body{
+    margin:0;
+    overflow:hidden;
+    background:#111;
+    font-family:Arial;
+}
+
+#game{
+    width:100vw;
+    height:100vh;
+    position:relative;
+
+    background:
+    repeating-linear-gradient(
+        90deg,
+        #333,
+        #333 20px,
+        #222 20px,
+        #222 40px
+    );
+}
+
+#rica{
+    position:absolute;
+    bottom:50px;
+    left:100px;
+    font-size:50px;
+}
+
+#beefen{
+    position:absolute;
+    top:100px;
+    right:100px;
+    font-size:60px;
+}
+
+.bullet{
+    position:absolute;
+    width:12px;
+    height:12px;
+    background:yellow;
+    border-radius:50%;
+}
+
+.fire{
+    background:orange;
+}
+
+#hp{
+    position:absolute;
+    top:20px;
+    left:20px;
+    color:white;
+    font-size:24px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="hp">👹 HP: 10</div>
+
+    <div id="rica">🧍</div>
+    <div id="beefen">👹</div>
+
+</div>
+
+<script>
+
+let rica = document.getElementById("rica");
+let beefen = document.getElementById("beefen");
+let game = document.getElementById("game");
+let hpText = document.getElementById("hp");
+
+let x = 100;
+let y = 0;
+
+let velocityY = 0;
+let isJumping = false;
+
+let bullets = [];
+
+let beefenHP = 10;
+
+/* 键盘控制 */
+document.addEventListener("keydown", function(e){
+
+    if(e.key === "ArrowRight"){
+        x += 15;
+    }
+
+    if(e.key === "ArrowLeft"){
+        x -= 15;
+    }
+
+    if(e.key === "ArrowUp"){
+
+        if(!isJumping){
+            velocityY = 18;
+            isJumping = true;
+        }
+    }
+
+    if(e.key === " "){
+        shoot();
+    }
+
+});
+
+/* 更新 Rica */
+function updateRica(){
+
+    y += velocityY;
+    velocityY -= 1;
+
+    if(y <= 0){
+        y = 0;
+        velocityY = 0;
+        isJumping = false;
+    }
+
+    rica.style.left = x + "px";
+    rica.style.bottom = (50 + y) + "px";
+}
+
+/* 射击 */
+function shoot(){
+
+    let bullet = document.createElement("div");
+    bullet.classList.add("bullet");
+
+    bullet.style.left = (x + 40) + "px";
+    bullet.style.bottom = (70 + y) + "px";
+
+    game.appendChild(bullet);
+
+    bullets.push({
+        el: bullet,
+        x: x + 40
+    });
+
+}
+
+/* Beefen 追击 */
+function moveBeefen(){
+
+    let bx = beefen.offsetLeft;
+    let rx = rica.offsetLeft;
+
+    if(bx > rx){
+        bx -= 2;
+    }
+
+    if(bx < rx){
+        bx += 2;
+    }
+
+    beefen.style.left = bx + "px";
+}
+
+/* 更新子弹（已修复！不会卡） */
+function updateBullets(){
+
+    for(let i = bullets.length - 1; i >= 0; i--){
+
+        let b = bullets[i];
+
+        b.x += 10;
+        b.el.style.left = b.x + "px";
+
+        let bx = beefen.offsetLeft;
+
+        /* 命中 */
+        if(b.x > bx && b.x < bx + 60){
+
+            b.el.remove();
+            bullets.splice(i,1);
+
+            beefenHP--;
+
+            hpText.innerHTML = "👹 HP: " + beefenHP;
+
+            if(beefenHP <= 0){
+
+                beefen.innerHTML = "💀";
+                alert("你赢了！！！");
+
+                location.reload();
+            }
+        }
+
+        /* 飞出屏幕 */
+        if(b.x > window.innerWidth){
+
+            b.el.remove();
+            bullets.splice(i,1);
+        }
+    }
+}
+
+/* 火焰攻击 */
+function fireAttack(){
+
+    let fire = document.createElement("div");
+    fire.classList.add("bullet","fire");
+
+    let fx = beefen.offsetLeft;
+
+    fire.style.left = fx + "px";
+    fire.style.top = beefen.offsetTop + "px";
+
+    game.appendChild(fire);
+
+    let move = setInterval(() => {
+
+        fx -= 7;
+        fire.style.left = fx + "px";
+
+        /* 打中 Rica */
+        if(fx < x + 40 && fx > x){
+
+            alert("💥 Rica 被打中了");
+            location.reload();
+        }
+
+        if(fx < 0){
+            fire.remove();
+            clearInterval(move);
+        }
+
+    },30);
+}
+
+/* 游戏循环 */
+setInterval(() => {
+
+    updateRica();
+    moveBeefen();
+    updateBullets();
+
+    if(Math.random() < 0.02){
+        fireAttack();
+    }
+
+},30);
+
+</script>
+
+</body>
+</html>
