@@ -114,6 +114,7 @@ document.addEventListener("keydown", function(e){
     }
 
     if(e.key === " "){
+        e.preventDefault(); // 修复：阻止空格键默认滚动页面
         shoot();
     }
 
@@ -199,6 +200,7 @@ function updateBullets(){
 
                 location.reload();
             }
+            continue; // 修复：命中后跳过后续判断，避免重复删除报错
         }
 
         /* 飞出屏幕 */
@@ -230,7 +232,8 @@ function fireAttack(){
 
         /* 打中 Rica */
         if(fx < x + 40 && fx > x){
-
+            clearInterval(move); // 修复：命中前先清除定时器
+            fire.remove(); // 修复：命中前先移除火球元素
             alert("💥 Rica 被打中了");
             location.reload();
         }
